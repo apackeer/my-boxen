@@ -36,3 +36,11 @@ github "xquartz",    "1.1.0"
 
 # Optional/custom modules. There are tons available at
 # https://github.com/boxen.
+github "python",     "1.2.1"
+github "chrome",     "1.1.1"
+github "iterm2",     "1.0.3" 
+github "osx",        "1.6.0"
+github "alfred",     "1.1.6"
+github "sublime_text_2", "1.1.2"
+github "autojump",   "1.0.0"
+github "fonts",      "1.0.1", :repo => "apackeer/puppet-fonts"
