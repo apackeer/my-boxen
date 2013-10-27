@@ -10,20 +10,14 @@ class people::apackeer::config (
 
   git::config::global { 'user.name': value => 'Arden Packeer' }
   git::config::global { 'user.email': value => 'contactme@ardenpackeer.com' }
+  git::config::global { 'core.editor': value => '/usr/bin/vim'}
   git::config::global { 'push.default': value => 'simple' }
-  git::config::global { 'color.ui': value => 'auto' }
-  git::config::global { 'color.interactive': value => 'true' }
-  git::config::global { 'color.diff': value => 'true' }
-  git::config::global { 'alias.lg': value => "log --pretty=format:'%C(yellow)%h%C(reset) %s %C(cyan)%cr%C(reset) %C(blue)%an%C(reset) %C(green)%d%C(reset)' --graph --date-order" }
-  git::config::global { 'alias.review': value => 'log -p --reverse -M -C -C --patience --no-prefix' }
-  git::config::global { 'alias.ll': value => 'log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --numstat' }
-  git::config::global { 'alias.dlc': value => 'diff --cached HEAD^' }
 
   ########################
   # Nodejs Configuration #
   ########################
 
-  class { 'nodejs::global': version => 'v0.10.21' } 
+  class { 'nodejs::global': version => 'v0.10.21' }
   nodejs::module { 'bower': node_version => 'v0.10.21' }
   nodejs::module { 'coffee-script': node_version => 'v0.10.21' }
 
@@ -35,9 +29,9 @@ class people::apackeer::config (
 
   # disable press-and-hold for accented character entry
   include osx::global::disable_key_press_and_hold
- 
-  # enables the keyboard for navigating controls in dialogs 
-  include osx::global::enable_keyboard_control_access  
+
+  # enables the keyboard for navigating controls in dialogs
+  include osx::global::enable_keyboard_control_access
 
   # expand the print dialog by default
   include osx::global::expand_print_dialog
@@ -63,16 +57,19 @@ class people::apackeer::config (
 
   # unset the hidden flag on ~/Library
   include osx::finder::unhide_library
-  
+
   # disable creation of .DS_Store files on network shares
   include osx::no_network_dsstores
 
   # disable the downloaded app quarantine
   include osx::disable_app_quarantine
 
-  ###############
-  # User Config #
-  ###############
+  # automatically run software-update
+  include osx::software_update
+
+  #######
+  # ZSH #
+  #######
 
   # Changes the default shell to the zsh version we get from Homebrew
   # Uses the osx_chsh type out of boxen/puppet-osx
@@ -87,13 +84,17 @@ class people::apackeer::config (
     require => Package['zsh'],
   }
 
+  ############
+  # dotfiles #
+  ############
+
   file { "/Users/${my_username}/.zshrc":
     ensure  => link,
     mode    => '0644',
     target  => "${my_sourcedir}/dotfiles/.zshrc",
     require => Repository["${my_sourcedir}/dotfiles"],
   }
-  
+
   file { "/Users/${my_username}/.oh-my-zsh":
     ensure  => link,
     mode    => '0644',
@@ -108,4 +109,104 @@ class people::apackeer::config (
     require => Repository["${my_sourcedir}/dotfiles"],
   }
 
+  file { "/Users/${my_username}/.hushlogin":
+    ensure => link,
+    mode   => '0644',
+    target => "${my_sourcedir}/dotfiles/.hushlogin",
+    require => Repository["${my_sourcedir}/dotfiles"],
+  }
+
+  file { "/Users/${my_username}/.aliases":
+    ensure => link,
+    mode   => '0644',
+    target => "${my_sourcedir}/dotfiles/.aliases",
+    require => Repository["${my_sourcedir}/dotfiles"],
+  }
+
+  file { "/Users/${my_username}/.gitattributes":
+    ensure => link,
+    mode   => '0644',
+    target => "${my_sourcedir}/dotfiles/.gitattributes",
+    require => Repository["${my_sourcedir}/dotfiles"],
+  }
+
+  file { "/Users/${my_username}/.gitconfig":
+    ensure => link,
+    mode   => '0644',
+    target => "${my_sourcedir}/dotfiles/.gitconfig",
+    require => Repository["${my_sourcedir}/dotfiles"],
+  }
+
+  file { "/Users/${my_username}/.exports":
+    ensure => link,
+    mode   => '0644',
+    target => "${my_sourcedir}/dotfiles/.exports",
+    require => Repository["${my_sourcedir}/dotfiles"],
+  }
+
+  file { "/Users/${my_username}/.functions":
+    ensure => link,
+    mode   => '0644',
+    target => "${my_sourcedir}/dotfiles/.functions",
+    require => Repository["${my_sourcedir}/dotfiles"],
+  }
+
+
+  ##########################
+  # User Config - Sublime #
+  ##########################
+
+  # TODO: install ST2 license file
+
+  sublime_text_2::package { 'Solarized Color Scheme':
+    source => 'SublimeColors/Solarized'
+  }
+
+  sublime_text_2::package { 'Puppet':
+    source => 'russCloak/SublimePuppet'
+  }
+
+  sublime_text_2::package { 'SidebarEnhancements':
+    source => 'titoBouzout/SideBarEnhancements'
+  }
+
+  sublime_text_2::package { 'GitGutter':
+    source => 'jisaacks/GitGutter'
+  }
+
+  sublime_text_2::package { 'Theme - Soda':
+    source => 'buymeasoda/soda-theme'
+  }
+
+  sublime_text_2::package { 'Git':
+    source => 'kemayo/sublime-text-git'
+  }
+
+  sublime_text_2::package { 'Package Control':
+    source => 'wbond/sublime_package_control'
+  }
+
+  file { "/Users/${::luser}/Library/Application Support/Sublime Text 2/Packages/User/Preferences.sublime-settings":
+    content => template('people/apackeer/Preferences.sublime-settings.erb'),
+    force   => true,
+    group   => 'staff',
+    owner   => $::luser,
+    require => Package['SublimeText2'],
+  }
+
+  #######
+  # vim #
+  #######
+  vim::bundle {
+    [
+      'altercation/vim-colors-solarized',
+    ]:
+  }
+
+  file { "/Users/${my_username}/.vimrc":
+    ensure => link,
+    mode   => '0644',
+    target => "${my_sourcedir}/dotfiles/.vimrc",
+    require => Repository["${my_sourcedir}/dotfiles"],
+  }
 }
